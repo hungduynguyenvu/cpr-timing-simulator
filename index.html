@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101318" />
+  <title>CPR timing simulator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app" class="app">
+    <section id="titleScreen" class="screen title-screen active" aria-label="Title screen">
+      <div class="title-wrap">
+        <h1 id="gameTitle"></h1>
+        <p id="gameSubtitle" class="subtitle"></p>
+
+        <div class="start-card" id="startCard">
+          <div id="startTitle" class="start-title"></div>
+          <div id="startSubtitle" class="start-subtitle"></div>
+        </div>
+      </div>
+
+      <aside class="toggles" id="toggles" aria-label="Game options">
+        <label class="toggle-row"><input id="practiceToggle" type="checkbox" /><span>practice mode</span></label>
+        <label class="toggle-row"><input id="guidesToggle" type="checkbox" /><span>enable guides</span></label>
+        <label class="toggle-row"><input id="hideMidAccuracyToggle" type="checkbox" /><span>hide accuracy in between sets</span></label>
+        <label class="toggle-row"><input id="fiveCyclesToggle" type="checkbox" /><span>5 cycles</span></label>
+        <button id="tutorialButton" class="tutorial-button" type="button">Tutorial</button>
+      </aside>
+
+      <aside class="volume-box" id="volumeBox" aria-label="Volume control">
+        <label for="volumeSlider">Volume <span id="volumeValue">90%</span></label>
+        <input id="volumeSlider" type="range" min="0" max="100" step="1" value="90" />
+      </aside>
+    </section>
+
+    <section id="gameScreen" class="screen game-screen" aria-label="Game screen">
+      <div id="quitHint" class="quit-hint hidden">Press ESC again to quit</div>
+      <div class="game-center">
+        <div id="statusText" class="status-text"></div>
+        <div id="compressionPulse" class="compression-pulse" aria-hidden="true"><div class="pulse-core"></div></div>
+        <div id="normalFeedback" class="normal-feedback"></div>
+
+        <section id="practicePanel" class="practice-panel hidden" aria-label="Practice feedback">
+          <div class="practice-topline">
+            <div><span class="practice-label">Compression</span><strong id="practiceCount">1 / 30</strong></div>
+            <div><span class="practice-label">Latest</span><strong id="practiceJudgement">PERFECT</strong></div>
+            <div><span class="practice-label">CPM</span><strong id="practiceCpm">START</strong></div>
+            <div><span class="practice-label">Average CPM</span><strong id="practiceAverage">—</strong></div>
+            <div><span class="practice-label">Accuracy</span><strong id="practiceAccuracy">100.00%</strong></div>
+          </div>
+          <div class="chart-wrap"><div id="cpmChart" class="cpm-chart" aria-label="CPM bar chart"></div></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="intermissionScreen" class="screen intermission-screen" aria-label="Intermission">
+      <div class="intermission-card">
+        <div id="intermissionTopTitle" class="intermission-top-title"></div>
+        <div id="intermissionAccuracy" class="intermission-accuracy"></div>
+        <div class="intermission-label">Next set in</div>
+        <div id="intermissionCountdown" class="countdown">7</div>
+      </div>
+    </section>
+
+    <section id="endingScreen" class="screen ending-screen" aria-label="Five cycle ending">
+      <div class="ending-card">
+        <div id="endingText" class="ending-text"></div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen result-screen" aria-label="Results">
+      <div class="results-shell">
+        <header class="results-header">
+          <div class="result-hero">
+            <div>
+              <div class="results-kicker">RUN COMPLETE</div>
+              <div id="resultAccuracy" class="result-accuracy">100.00%</div>
+            </div>
+            <div class="rank-block">
+              <div id="resultRank" class="result-rank">SS</div>
+              <div id="resultRankSubtitle" class="result-rank-subtitle"></div>
+            </div>
+          </div>
+          <div id="modsList" class="mods-list"></div>
+        </header>
+
+        <div id="overallStats" class="overall-stats"></div>
+        <div id="overallCounts" class="judgement-counts"></div>
+        <div id="setResults" class="set-results"></div>
+
+        <div class="results-footer"><button id="returnButton" type="button">Return to title</button></div>
+      </div>
+    </section>
+
+    <section id="failScreen" class="screen fail-screen" aria-label="Run failed">
+      <div class="fail-card">
+        <h2>RUN FAILED</h2>
+        <p id="failReason"></p>
+        <p id="failSubtitle" class="fail-joke"></p>
+        <p id="failReturnHint" class="fail-sub hidden">Press any key or click to return</p>
+      </div>
+    </section>
+
+    <div id="tutorialModal" class="tutorial-modal hidden" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+      <div class="tutorial-window">
+        <div class="tutorial-window-bar">
+          <strong id="tutorialTitle">Tutorial</strong>
+          <button id="tutorialCloseTop" type="button" aria-label="Close tutorial">×</button>
+        </div>
+        <div id="tutorialContent" class="tutorial-content"></div>
+        <div class="tutorial-footer">
+          <button id="tutorialCloseBottom" type="button">Close tutorial</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
