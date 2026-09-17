@@ -39,9 +39,33 @@ h1 { font-size: clamp(2.2rem, 6vw, 5rem); margin: 0; letter-spacing: -0.04em; }
 .game-screen { cursor: pointer; }
 .game-center { width: min(1100px, 94vw); height: min(760px, 92vh); display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .status-text { position: absolute; top: 7vh; left: 50%; transform: translateX(-50%); min-height: 2rem; color: var(--muted); font-weight: 700; text-align: center; }
-.compression-pulse { width: clamp(160px, 24vw, 270px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255,255,255,0.12); transform: scale(1); }
+.compression-visual-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.compression-pulse { width: clamp(160px, 24vw, 270px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255,255,255,0.12); transform: scale(1); position: relative; z-index: 1;}
+.approach-circle {
+  position: absolute;
+
+  width: clamp(160px, 24vw, 270px);
+  aspect-ratio: 1;
+
+  border: 4px solid rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+
+  pointer-events: none;
+  z-index: 2;
+
+  transform: scale(1);
+}
 .pulse-core { width: 44%; aspect-ratio: 1; border-radius: 50%; background: rgba(255,255,255,0.11); }
 .compression-pulse.hit { animation: compress 115ms ease-out; }
+.compression-pulse.guide-beat {
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.22),
+    0 0 26px rgba(255, 255, 255, 0.45);
+}
 @keyframes compress { 0% { transform: scale(1); } 45% { transform: scale(0.82); } 100% { transform: scale(1); } }
 .normal-feedback { min-height: 24px; margin-top: 18px; color: var(--muted); }
 
@@ -135,7 +159,7 @@ h1 { font-size: clamp(2.2rem, 6vw, 5rem); margin: 0; letter-spacing: -0.04em; }
   .volume-box { left: 50%; right: auto; transform: translateX(-50%); bottom: max(12px, env(safe-area-inset-bottom)); }
   .practice-topline { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
   .game-center { justify-content: flex-start; padding-top: 16vh; }
-  .compression-pulse { width: 150px; }
+  .compression-pulse, .approach-circle { width: 150px; }
   .practice-panel { margin-top: 18px; }
   .cpm-chart, .result-chart { height: 165px; }
   .results-header { align-items: start; flex-direction: column; }

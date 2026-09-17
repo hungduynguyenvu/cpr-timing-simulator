@@ -44,12 +44,12 @@ const CONFIG = {
         subtitle: "breathing time's over. back to compressing boy."
       },
       overclicks: {
-        title: "Too many extra compressions after the set.",
+        title: "Too many extra compressions after 30.",
         subtitle: "too much compressing, too little breathing."
       }
     },
 
-    ppUnavailableWithGuide: "not available with sound guide",
+    ppUnavailableWithGuide: "not available with guide",
 
     tutorial: {
       title: "Tutorial",
@@ -97,9 +97,10 @@ const CONFIG = {
           ]
         },
         {
-          heading: "Sound guide",
+          heading: "Guide mode",
           paragraphs: [
-            "Sound guide plays a chain guide beep right after the first compression of each set on an independent 110 CPM rhythm (one beat about every 0.545 seconds). It does not resync to your later clicks.",
+            "Provide a chain of beeping beats and shrinking circle visuals after the first compression of each set on an independent 110 CPM rhythm (one beat about every 0.545 seconds). It does not resync to your later clicks.",
+            "Helps provide a visible and audio cue to sync your rhythm to."
           ]
         },
         {
@@ -166,6 +167,12 @@ const CONFIG = {
     },
 
     guideCpm: 110,
+
+    guideVisual: {
+      enabled:true,
+      approachScale: 3.0
+    },                                
+
     escapeDoublePressWindowMs: 1500,
 
     // Joke PP values. PP = floor(maxPP * finalAccuracy / 100).

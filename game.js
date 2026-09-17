@@ -18,7 +18,7 @@
     practiceToggle: $("practiceToggle"), guidesToggle: $("guidesToggle"), hideMidAccuracyToggle: $("hideMidAccuracyToggle"), fiveCyclesToggle: $("fiveCyclesToggle"),
     tutorialButton: $("tutorialButton"), tutorialModal: $("tutorialModal"), tutorialTitle: $("tutorialTitle"), tutorialContent: $("tutorialContent"),
     tutorialCloseTop: $("tutorialCloseTop"), tutorialCloseBottom: $("tutorialCloseBottom"),
-    quitHint: $("quitHint"), statusText: $("statusText"), compressionPulse: $("compressionPulse"), normalFeedback: $("normalFeedback"),
+    quitHint: $("quitHint"), statusText: $("statusText"), compressionPulse: $("compressionPulse"), approachCircle: $("approachCircle"), normalFeedback: $("normalFeedback"),
     practicePanel: $("practicePanel"), practiceCount: $("practiceCount"), practiceJudgement: $("practiceJudgement"), practiceCpm: $("practiceCpm"),
     practiceAverage: $("practiceAverage"), practiceAccuracy: $("practiceAccuracy"), cpmChart: $("cpmChart"),
     intermissionTopTitle: $("intermissionTopTitle"), intermissionAccuracy: $("intermissionAccuracy"), intermissionCountdown: $("intermissionCountdown"),
@@ -44,6 +44,7 @@
   let run = null;
   let tutorialOpen = false;
   let timers = [];
+  let guideVisualTimers = [];
   let activeCompressionTimer = null;
   let stopTestTimer = null;
   let failDismissReady = false;
@@ -346,40 +347,191 @@
 
   function startGuide() {
     stopGuide();
+
     if (!run?.guides || !audioContext) return;
 
-    const interval = 60 / CONFIG.rules.guideCpm;
+    const intervalSeconds = 60 / CONFIG.rules.guideCpm;
+    const intervalMs = intervalSeconds * 1000;
+
     const anchor = audioContext.currentTime;
 
-    // Extra initial guide cue requested by design. The metronome cadence itself
-    // remains anchored to the first compression, not to this small cue delay.
-    playGuideSound(anchor + CONFIG.audio.initialGuideBeepDelayMs / 1000);
+    /*
+    * Initial confirmation beep after the first compression.
+    *
+    * This is NOT one of the repeating metronome beats.
+    */
+    playGuideSound(
+      anchor + CONFIG.audio.initialGuideBeepDelayMs / 1000
+    );
 
-    let nextTime = anchor + interval;
+    /*
+    * The first approach circle starts immediately after
+    * compression #1 and reaches the target at the first
+    * real 110 CPM guide beat.
+    */
+    showGuideVisual();
+    animateApproachCircle(intervalMs);
+
+    let nextTime = anchor + intervalSeconds;
+
     const token = Symbol("guide");
-    guideScheduler = { token, intervalId: null };
+
+    guideScheduler = {
+      token,
+      intervalId: null
+    };
+
+
+    function scheduleVisualBeat(beatTime) {
+      const delayMs =
+        Math.max(
+          0,
+          (beatTime - audioContext.currentTime) * 1000
+        );
+
+      const timer = window.setTimeout(() => {
+        if (
+          !guideScheduler ||
+          guideScheduler.token !== token ||
+          state !== STATE.ACTIVE
+        ) {
+          return;
+        }
+
+        /*
+        * The previous ring has now reached the target.
+        */
+        flashGuideTarget();
+
+        /*
+        * Immediately start the next approach circle.
+        */
+        animateApproachCircle(intervalMs);
+
+      }, delayMs);
+
+      guideVisualTimers.push(timer);
+    }
+
 
     const scheduler = () => {
-      if (!guideScheduler || guideScheduler.token !== token || state !== STATE.ACTIVE) return;
-      while (nextTime < audioContext.currentTime + 0.12) {
+      if (
+        !guideScheduler ||
+        guideScheduler.token !== token ||
+        state !== STATE.ACTIVE
+      ) {
+        return;
+      }
+
+      /*
+      * Schedule audio slightly ahead using Web Audio,
+      * just like the existing v4 implementation.
+      */
+      while (
+        nextTime <
+        audioContext.currentTime + 0.12
+      ) {
         playGuideSound(nextTime);
-        nextTime += interval;
+
+        /*
+        * Schedule the visual contact at the same intended
+        * beat time.
+        */
+        scheduleVisualBeat(nextTime);
+
+        nextTime += intervalSeconds;
       }
     };
 
     scheduler();
-    guideScheduler.intervalId = window.setInterval(scheduler, 20);
+
+    guideScheduler.intervalId =
+      window.setInterval(scheduler, 20);
   }
 
   function stopGuide() {
-    if (guideScheduler?.intervalId) clearInterval(guideScheduler.intervalId);
+    if (guideScheduler?.intervalId) {
+      clearInterval(guideScheduler.intervalId);
+    }
+
     guideScheduler = null;
+
+    hideGuideVisual();
   }
 
   // ------------------------------------------------------------
   // Visual / chart helpers
   // ------------------------------------------------------------
+  function showGuideVisual() {
+    if (!run?.guides ||
+    !CONFIG.rules.guideVisual?.enabled) {
+      hideGuideVisual();
+      return;
+    }
 
+    ui.approachCircle.classList.remove("hidden");
+  }
+
+
+  function hideGuideVisual() {
+    ui.approachCircle.classList.add("hidden");
+
+    // Stop any currently running approach animation.
+    ui.approachCircle
+      .getAnimations()
+      .forEach(animation => animation.cancel());
+
+    // Cancel any scheduled visual beat resets.
+    guideVisualTimers.forEach(timer => clearTimeout(timer));
+    guideVisualTimers = [];
+  }
+
+
+  function animateApproachCircle(durationMs) {
+    if (
+      !run?.guides ||
+      !CONFIG.rules.guideVisual?.enabled ||
+      state !== STATE.ACTIVE
+    ) {
+      return;
+    }
+
+    showGuideVisual();
+
+    // Cancel only the previous approach animation.
+    ui.approachCircle
+      .getAnimations()
+      .forEach(animation => animation.cancel());
+
+    ui.approachCircle.animate(
+      [
+        {
+          transform:
+            `scale(${CONFIG.rules.guideVisual.approachScale})`,
+          opacity: 0.65
+        },
+        {
+          transform: "scale(1)",
+          opacity: 1
+        }
+      ],
+      {
+        duration: durationMs,
+        easing: "linear",
+        fill: "forwards"
+      }
+    );
+  }
+
+
+  function flashGuideTarget() {
+    ui.compressionPulse.classList.remove("guide-beat");
+
+    // Force the browser to recognize the class reset.
+    void ui.compressionPulse.offsetWidth;
+
+    ui.compressionPulse.classList.add("guide-beat");
+  }
   function pulse() {
     ui.compressionPulse.classList.remove("hit");
     void ui.compressionPulse.offsetWidth;
@@ -752,7 +904,7 @@
     ui.modsList.innerHTML = "";
     const mods = [];
     if (run.practice) mods.push("Practice mode");
-    if (run.guides) mods.push("Sound guide");
+    if (run.guides) mods.push("Guide enabled");
     if (run.fiveCycles) mods.push("5 cycles");
     if (!mods.length) mods.push("No mods");
 
